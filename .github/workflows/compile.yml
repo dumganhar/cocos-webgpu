@@ -88,13 +88,50 @@ jobs:
           fi
           which ninja
 
+      - name: Apply Patch
+        run: |
+          cp -f ./patch/CMakeLists.txt ./cocos-engine/native/cocos/renderer/gfx-wgpu
+
       - name: Compile
         run: |
+          cd $GITHUB_WORKSPACE
+          mkdir artifact
           NATIVE_ROOT=$GITHUB_WORKSPACE/cocos-engine/native
-          cd $NATIVE_ROOT/cocos/renderer/gfx-wgpu
+          pushd $NATIVE_ROOT/cocos/renderer/gfx-wgpu
           mkdir build
           cd build
           emcmake cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release
           ninja
+          ls -l
+          cp *.a $GITHUB_WORKSPACE/artifact/
           echo "============== Compile WGPU by ems on Ubuntu Done! =============="
 
+      - name: Upload Artifact
+        if: github.event_name != 'release'
+        uses: actions/upload-artifact@v3
+        with: 
+          name: cocos-webgpu
+          path: artifact
+
+      - name: Pack dist files
+        if: github.event_name == 'release'
+        uses: thedoctor0/zip-release@a24011d8d445e4da5935a7e73c1f98e22a439464
+        with:
+          type: 'zip'
+          directory: 'artifact'
+          path: '.'
+          filename: 'cocos-webgpu.zip'
+
+      - name: Show Files in artifact directory
+        if: github.event_name == 'release'
+        run: |
+          ls -l artifact
+
+      - name: Upload to Release
+        if: github.event_name == 'release'
+        uses: svenstaro/upload-release-action@1beeb572c19a9242f4361f4cee78f8e0d9aec5df
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: artifact/cocos-webgpu.zip
+          asset_name: cocos-webgpu.zip
+          tag: ${{ github.ref }}
