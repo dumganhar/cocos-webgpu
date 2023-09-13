@@ -63,7 +63,7 @@ jobs:
       - name: Download external libraries
         shell: bash
         run: |
-          EXT_VERSION=`node ./.github/workflows/get-native-external-version.js`
+          EXT_VERSION=`node ./cocos-engine/.github/workflows/get-native-external-version.js`
           git clone --branch $EXT_VERSION --depth 1 https://github.com/cocos/cocos-engine-external ./cocos-engine/native/external
 
       - name: Setup emsdk
